@@ -12,4 +12,14 @@ Página inicial: http://127.0.0.1:3000
 Gerar 10 vendas: http://127.0.0.1:3000/vendas/
 Gerar 50 vendas: http://127.0.0.1:3000/vendas/?records=50
 
-![alt text](image.png)
+
+
+
+
+#### Após isso vamos processar essa API com o Event-processor.py que será orquestrado para rodar a cada 5 segundos pelo airflow:
+
+Esse código faz uma requisição na API, transforma o json em um dataframe e adiciona no postgres que pode ser visualizado pelo pgadmin4:
+
+
+
+
