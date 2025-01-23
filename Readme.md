@@ -8,6 +8,8 @@
 
 ### Acesse a API no navegador ou no Postman:
 
-Página inicial: http://127.0.0.1:8000
-Gerar 10 vendas: http://127.0.0.1:8000/vendas/
-Gerar 50 vendas: http://127.0.0.1:8000/vendas/?records=50
+Página inicial: http://127.0.0.1:3000
+Gerar 10 vendas: http://127.0.0.1:3000/vendas/
+Gerar 50 vendas: http://127.0.0.1:3000/vendas/?records=50
+
+![alt text](image.png)
