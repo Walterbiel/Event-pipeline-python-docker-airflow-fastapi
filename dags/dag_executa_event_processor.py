@@ -1,7 +1,7 @@
 # dag_executa_script.py
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime
+from datetime import datetime,timedelta
 
 # Importando a função do arquivo 'event-processor.py'
 from Event_processor import extracao_armazenamento

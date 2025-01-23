@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: postgres:latest
     container_name: postgres
     restart: always
     environment:
@@ -25,7 +25,7 @@ services:
       - postgres
 
   airflow:
-    image: apache/airflow:2.7.3
+    image: apache/airflow:latest
     container_name: airflow
     restart: always
     environment:
