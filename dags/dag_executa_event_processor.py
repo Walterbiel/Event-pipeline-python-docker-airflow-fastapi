@@ -3,7 +3,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 
-# Importando a função do arquivo 'meu_script.py'
+# Importando a função do arquivo 'event-processor.py'
 from Event_processor import extracao_armazenamento
 
 # Configuração do DAG
@@ -13,12 +13,11 @@ default_args = {
     'retries': 2,
     'retry_delay': timedelta(seconds=10),
 }
-
 with DAG(
-    dag_id='executa_outro_arquivo',
+    dag_id='executa_event_processor',
     default_args=default_args,
     description='DAG para executar outro arquivo Python',
-    schedule_interval='@daily',  # Exemplo de agendamento diário
+    schedule_interval=timedelta(seconds=1),  # executa a cada segundo
     catchup=False,
 ) as dag:
 
