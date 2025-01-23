@@ -1,23 +1,82 @@
 # dag_executa_script.py
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
+import requests
+import pandas as pd
+import psycopg2
+from sqlalchemy import create_engine
 
-# Importando a função do arquivo 'event-processor.py'
-from Event_processor import extracao_armazenamento
+def extracao_armazenamento():
+    # URL da API
+    url = "http://127.0.0.1:3000/vendas/?records=50"
+
+    # Cabeçalhos (se necessário)
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    # Parâmetros de consulta (se necessário)
+    params = {
+        "userId": 1
+    }
+
+    # Fazendo uma requisição GET
+    response = requests.get(url, headers=headers, params=params)
+
+    # Verificando se a requisição foi bem-sucedida (código 200)
+    if response.status_code == 200:
+        data = response.json()  # Converte a resposta para JSON
+        print("Dados recebidos:", data)
+    else:
+        print(f"Erro na requisição: {response.status_code}, {response.text}")
+
+        #------------------------------------------------------------------------------
+
+    # Criando DataFrame
+    df = pd.DataFrame(data['vendas'])
+
+    # Convertendo coluna de data para datetime
+    df['data'] = pd.to_datetime(df['data'])
+
+    # Ordenando os dados por data
+    df = df.sort_values(by='data')
+
+    # Configuração da conexão com o PostgreSQL
+    db_usuario = 'airflow'
+    db_senha = 'airflow'
+    db_host = 'localhost'
+    db_porta = '5432'
+    db_nome = 'airflow'
+
+    # Criando a string de conexão
+    engine = create_engine(f'postgresql://{db_usuario}:{db_senha}@{db_host}:{db_porta}/{db_nome}')
+
+    # Inserindo os dados no PostgreSQL
+    tabela_destino = 'airflow'
+
+    try:
+        df.to_sql(tabela_destino, con=engine, if_exists='append', index=False)
+        print(f'Dados inseridos com sucesso na tabela "{tabela_destino}".')
+    except Exception as e:
+        print(f'Erro ao inserir os dados: {e}')
+
+        #dag--------------------------------------------------------------------------
 
 # Configuração do DAG
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2025, 1, 23),
+    'start_date': datetime(2025, 1, 23),  # Modifique para uma data mais próxima ou passada
     'retries': 2,
     'retry_delay': timedelta(seconds=10),
 }
+
+# Definição do DAG
 with DAG(
     dag_id='executa_event_processor',
     default_args=default_args,
     description='DAG para executar outro arquivo Python',
-    schedule_interval=timedelta(seconds=1),  # executa a cada segundo
+    schedule_interval=timedelta(minutes=1),  # Recomenda-se um intervalo maior, como 1 minuto
     catchup=False,
 ) as dag:
 
@@ -27,4 +86,6 @@ with DAG(
         python_callable=extracao_armazenamento,  # Função a ser executada
     )
 
+    # Definindo a ordem de execução (se houver mais tarefas no futuro)
     tarefa
+
