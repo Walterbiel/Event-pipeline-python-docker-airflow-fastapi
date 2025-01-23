@@ -24,29 +24,42 @@ services:
     depends_on:
       - postgres
 
-  airflow:
-    image: apache/airflow:latest
-    container_name: airflow
-    restart: always
+  webserver:
+    image: apache/airflow:2.5.1
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
-      AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 5
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__WEBSERVER__RBAC=true
     ports:
       - "8080:8080"
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-    command: >
-      bash -c "
-      airflow db init &&
-      airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
-      airflow scheduler &
-      airflow webserver"
     depends_on:
       - postgres
+    volumes:
+      - ./dags:/opt/airflow/dags
+    command: /bin/bash -c "airflow db init && airflow users create --username admin --password admin_password --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver"
+    entrypoint: /bin/bash -c "airflow db init && airflow users create --username admin --password admin_password --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver"
+
+  scheduler:
+    image: apache/airflow:2.5.1
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    depends_on:
+      - postgres
+    volumes:
+      - ./dags:/opt/airflow/dags
+    entrypoint: /bin/bash -c "airflow db init && airflow scheduler"
+
+  worker:
+    image: apache/airflow:2.5.1
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    depends_on:
+      - postgres
+    volumes:
+      - ./dags:/opt/airflow/dags
+    entrypoint: /bin/bash -c "airflow db init && airflow worker"
 
 volumes:
   postgres_data:
